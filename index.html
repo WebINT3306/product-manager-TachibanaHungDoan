@@ -1,121 +1,165 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Quản lý Sản phẩm</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-    th { background-color: #f4f4f4; cursor: pointer; }
-    tbody tr:nth-child(even) { background-color: #f9f9f9; }
-    tbody tr:hover { background-color: #f1f1f1; }
-    .form-container { margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; }
-    input { margin-right: 10px; padding: 5px; }
-    #btn-add { padding: 5px 15px; cursor: pointer; background: #28a745; color: #fff; border: none; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Quản lý sản phẩm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #e6f2ff;
+        }
+
+        .form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="form-container">
-    <input type="text" id="input-name" placeholder="Tên">
-    <input type="text" id="input-category" placeholder="Danh mục">
-    <input type="number" id="input-price" placeholder="Giá">
-    <input type="number" id="input-quantity" placeholder="Số lượng">
-    <button id="btn-add">Thêm</button>
-  </div>
+    <h2>Quản lý sản phẩm</h2>
 
-  <table id="product-table">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th id="col-name">Tên sản phẩm <span id="sort-icon"></span></th>
-        <th>Danh mục</th>
-        <th>Đơn giá</th>
-        <th>Số lượng</th>
-      </tr>
-    </thead>
-    <tbody id="product-list-body"></tbody>
-  </table>
+    <table id="product-table">
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th id="sort-name">Tên sản phẩm ▲▼</th>
+                <th>Danh mục</th>
+                <th>Đơn giá</th>
+                <th>Số lượng</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
-  <script>
-    // 1. Biến toàn cục quan trọng
-    var products = []; 
-    var isAscending = true;
+    <div class="form">
+        <h3>Thêm sản phẩm</h3>
+        <input id="input-name" placeholder="Tên sản phẩm">
+        <input id="input-category" placeholder="Danh mục">
+        <input id="input-price" type="number" placeholder="Đơn giá">
+        <input id="input-quantity" type="number" placeholder="Số lượng">
+        <button id="btn-add">Thêm</button>
+    </div>
+<script>
+        let productList = [];
+        let sortAsc = true;
+        const tbody = document.querySelector("#product-table tbody");
 
-    // 2. Hàm Load dữ liệu AJAX
-    function loadData() {
-      var xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          products = JSON.parse(xhr.responseText);
-          renderTable(products);
-        }
-      };
-      xhr.open("GET", "./products.json", true);
-      xhr.send();
-    }
-
-    // 3. Hàm Render bảng (Dùng vòng lặp cơ bản để ổn định nhất)
-    function renderTable(data) {
-      var tbody = document.querySelector("#product-table tbody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-      
-      for (var i = 0; i < data.length; i++) {
-        var p = data[i];
-        var row = document.createElement("tr");
-        row.innerHTML = "<td>" + (i + 1) + "</td>" +
-                        "<td>" + p.name + "</td>" +
-                        "<td>" + (p.category || "") + "</td>" +
-                        "<td>" + p.price + "</td>" +
-                        "<td>" + p.quantity + "</td>";
-        tbody.appendChild(row);
-      }
-    }
-
-    // 4. Chức năng Sắp xếp (Sort)
-    document.getElementById("col-name").addEventListener("click", function() {
-      isAscending = !isAscending;
-      products.sort(function(a, b) {
-        var nA = a.name.toLowerCase();
-        var nB = b.name.toLowerCase();
-        if (isAscending) return nA < nB ? -1 : 1;
-        return nA > nB ? -1 : 1;
-      });
-      document.getElementById("sort-icon").innerHTML = isAscending ? "▲" : "▼";
-      renderTable(products);
-    });
-
-    // 5. Chức năng Thêm (Add)
-    document.getElementById("btn-add").addEventListener("click", function() {
-      var nameVal = document.getElementById("input-name").value.trim();
-      var catVal = document.getElementById("input-category").value.trim();
-      var priceVal = parseFloat(document.getElementById("input-price").value);
-      var quantVal = parseInt(document.getElementById("input-quantity").value);
-
-      // Validation theo yêu cầu
-      if (nameVal.length >= 3 && !isNaN(priceVal) && priceVal > 0 && !isNaN(quantVal) && quantVal >= 1) {
-        var newObj = {
-          id: products.length + 1,
-          name: nameVal,
-          category: catVal,
-          price: priceVal,
-          quantity: quantVal
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                productList = JSON.parse(xhr.responseText);
+                renderTable(productList);
+            }
         };
-        products.push(newObj);
-        renderTable(products);
+        xhr.open('GET', 'products.json');
+        xhr.send();
 
-        // Reset inputs
-        document.getElementById("input-name").value = "";
-        document.getElementById("input-category").value = "";
-        document.getElementById("input-price").value = "";
-        document.getElementById("input-quantity").value = "";
-      }
-    });
+        function renderTable(data) {
+            tbody.innerHTML = "";
+            data.forEach((p, index) => {
+                const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${p.name}</td>
+                    <td>${p.category || ""}</td>
+                    <td>${p.price}</td>
+                    <td>${p.quantity}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
 
-    // 6. Chạy khi tải trang
-    window.onload = loadData;
-  </script>
+        document.getElementById("sort-name").addEventListener("click", () => {
+            productList.sort((a, b) => {
+                if (sortAsc) {
+                    return a.name.localeCompare(b.name);
+                } else {
+                    return b.name.localeCompare(a.name);
+                }
+            });
+
+            document.getElementById("sort-name").textContent = "Tên sản phẩm " + (sortAsc ? "▲" : "▼");
+
+            sortAsc = !sortAsc;
+            renderTable(productList);
+        });
+
+        document.getElementById("btn-add").addEventListener("click", () => {
+            const name = document.getElementById("input-name").value.trim();
+            const category = document.getElementById("input-category").value.trim();
+            const price = parseFloat(document.getElementById("input-price").value);
+            const quantity = parseInt(document.getElementById("input-quantity").value);
+
+            if (name.length < 3 || isNaN(price) || price <= 0 || isNaN(quantity) || quantity < 1) {
+                alert("Vui lòng nhập đúng định dạng dữ liệu!");
+                return;
+            }
+
+            const newProduct = {
+                id: Date.now(),
+                name: name,
+                category: category,
+                price: price,
+                quantity: quantity
+            };
+
+            productList.push(newProduct);
+            renderTable(productList);
+
+            document.getElementById("input-name").value = "";
+            document.getElementById("input-category").value = "";
+            document.getElementById("input-price").value = "";
+            document.getElementById("input-quantity").value = "";
+        });
+    </script>
+
 </body>
 </html>
