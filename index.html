@@ -4,8 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý Sản phẩm</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #f4f4f4; cursor: pointer; }
+    tbody tr:hover { background-color: #f1f1f1; }
+    tbody tr:nth-child(even) { background-color: #f9f9f9; }
+    .form-container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .form-container input { margin-right: 10px; padding: 8px; margin-bottom: 10px; }
+    #btn-add { padding: 8px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+    #btn-add:hover { background-color: #218838; }
+  </style>
 </head>
 <body>
+  <h2>Thêm sản phẩm</h2>
+  <div class="form-container">
+    <input type="text" id="input-name" placeholder="Tên sản phẩm">
+    <input type="text" id="input-category" placeholder="Danh mục">
+    <input type="number" id="input-price" placeholder="Đơn giá">
+    <input type="number" id="input-quantity" placeholder="Số lượng">
+    <button id="btn-add"> Thêm </button>
+  </div>
 
+  <h2>Danh sách sản phẩm</h2>
+  <table id="product-table">
+    <thead> <tr>
+        <th>STT</th>
+        <th id="col-name">Tên sản phẩm <span id="sort-icon"></span></th>
+        <th>Danh mục</th>
+        <th>Đơn giá</th>
+        <th>Số lượng</th>
+      </tr>
+    </thead>
+    <tbody></tbody> </table>
+
+  <script>
+    let products = [];
+    let isAscending = true;
+
+    function loadData() {
+      const xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          products = JSON.parse(xhr.responseText); 
+          renderTable(products);
+        }
+      };
+      xhr.open("GET", "products.json");
+      xhr.send();
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector("#product-table tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      data.forEach((product, index) => {
+        const row = `<tr>
+          <td>${index + 1}</td>
+          <td>${product.name}</td>
+          <td>${product.category}</td>
+          <td>${Number(product.price).toLocaleString()}</td>
+          <td>${product.quantity}</td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    //Add
+    document.getElementById("btn-add").addEventListener("click", function() {
+      const name = document.getElementById("input-name").value.trim();
+      const category = document.getElementById("input-category").value.trim();
+      const price = parseFloat(document.getElementById("input-price").value);
+      const quantity = parseInt(document.getElementById("input-quantity").value);
+
+      if (name.length < 3) {
+        alert("Tên sản phẩm phải có ít nhất 3 ký tự.");
+        return;
+      }
+      if (isNaN(price) || price <= 0) {
+        alert("Đơn giá phải là một số dương.");
+        return;
+      }
+      if (isNaN(quantity) || quantity < 1) { // Đề bài yêu cầu >= 1
+        alert("Số lượng phải là một số nguyên >= 1.");
+        return;
+      }
+
+      const newProduct = {
+        id: products.length + 1,
+        name: name,
+        category: category,
+        price: price,
+        quantity: quantity
+      };
+
+      products.push(newProduct);
+      renderTable(products);
+
+      // Reset form
+      document.getElementById("input-name").value = "";
+      document.getElementById("input-category").value = "";
+      document.getElementById("input-price").value = "";
+      document.getElementById("input-quantity").value = "";
+    });
+
+    //Sort
+    document.getElementById('col-name').addEventListener('click', function() {
+      isAscending = !isAscending;
+      products.sort((a, b) => {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        if (isAscending) {
+          return nameA < nameB ? -1 : 1;
+        } else {
+          return nameA > nameB ? -1 : 1;
+        }
+      });
+      document.getElementById('sort-icon').innerText = isAscending ? ' ▲' : ' ▼';
+      renderTable(products);
+    });
+
+    //Load page
+    window.onload = loadData; 
+  </script>
 </body>
 </html>
